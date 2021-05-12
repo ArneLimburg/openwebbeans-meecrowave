@@ -111,7 +111,7 @@ public class MeecrowaveContextConfig extends ContextConfig {
                 scannerService.setDocBase(context.getDocBase());
                 scannerService.setShared(configuration.getSharedLibraries());
                 if (configuration.getWatcherBouncing() > 0) { // note that caching should be disabled with this config in most of the times
-                    watcher = new ReloadOnChangeController(context, configuration.getWatcherBouncing());
+                    watcher = new ReloadOnChangeController(context, configuration);
                     scannerService.setFileVisitor(f -> watcher.register(f));
                 }
                 scannerService.scan();

@@ -62,6 +62,9 @@ public class Configuration {
     @CliOption(name = "watcher-bouncing", description = "Activate redeployment on directories update using this bouncing.")
     private int watcherBouncing = 500;
 
+    @CliOption(name = "reload-classes", description = "Reload classes on redeployment via watcher-bouncing bouncing.")
+    private boolean reloadClasses = false;
+
     @CliOption(name = "http", description = "HTTP port")
     private int httpPort = 8080;
 
@@ -298,6 +301,7 @@ public class Configuration {
     public Configuration(final Configuration toCopy) {
         pidFile = toCopy.pidFile;
         watcherBouncing = toCopy.watcherBouncing;
+        reloadClasses = toCopy.reloadClasses;
         httpPort = toCopy.httpPort;
         httpsPort = toCopy.httpsPort;
         stopPort = toCopy.stopPort;
@@ -459,6 +463,14 @@ public class Configuration {
 
     public void setWatcherBouncing(final int watcherBouncing) {
         this.watcherBouncing = watcherBouncing;
+    }
+
+    public boolean isReloadClasses() {
+        return reloadClasses;
+    }
+
+    public void setReloadClasses(final boolean reloadClasses) {
+        this.reloadClasses = reloadClasses;
     }
 
     public String getTomcatAccessLogPattern() {
@@ -1283,6 +1295,7 @@ public class Configuration {
         }
         final Configuration that = Configuration.class.cast(o);
         return watcherBouncing == that.watcherBouncing &&
+                reloadClasses == that.reloadClasses &&
                 httpPort == that.httpPort &&
                 httpsPort == that.httpsPort &&
                 stopPort == that.stopPort &&
@@ -1365,7 +1378,7 @@ public class Configuration {
 
     @Override
     public int hashCode() {
-        return Objects.hash(pidFile, watcherBouncing, httpPort, httpsPort, stopPort, host, dir, serverXml, keepServerXmlAsThis, properties, quickSession, skipHttp, ssl, keystoreFile, keystorePass, keystoreType, clientAuth, keyAlias, sslProtocol, webXml, loginConfig, securityConstraints, realm, users, roles, http2, connectors, tempDir, webResourceCached, conf, deleteBaseOnStartup, jaxrsMapping, cdiConversation, jaxrsProviderSetup, jaxrsDefaultProviders, jaxrsAutoActivateBeanValidation, jaxrsLogProviders, jsonpBufferStrategy, jsonpMaxStringLen, jsonpMaxReadBufferLen, jsonpMaxWriteBufferLen, jsonpSupportsComment, jsonpPrettify, jsonbEncoding, jsonbNulls, jsonbIJson, jsonbPrettify, jsonbBinaryStrategy, jsonbNamingStrategy, jsonbOrderStrategy, loggingGlobalSetup, cxfServletParams, tomcatScanning, tomcatAutoSetup, tomcatJspDevelopment, useShutdownHook, tomcatFilter, scanningIncludes, scanningExcludes, scanningPackageIncludes, scanningPackageExcludes, webSessionTimeout, webSessionCookieConfig, useTomcatDefaults, tomcatWrapLoader, tomcatNoJmx, sharedLibraries, useLog4j2JulLogManager, injectServletContainerInitializer, tomcatAccessLogPattern, meecrowaveProperties, jaxwsSupportIfAvailable, defaultSSLHostConfigName, initializeClientBus, extensions, instanceCustomizers, initializers, antiResourceLocking, contextConfigurers);
+        return Objects.hash(pidFile, watcherBouncing, reloadClasses, httpPort, httpsPort, stopPort, host, dir, serverXml, keepServerXmlAsThis, properties, quickSession, skipHttp, ssl, keystoreFile, keystorePass, keystoreType, clientAuth, keyAlias, sslProtocol, webXml, loginConfig, securityConstraints, realm, users, roles, http2, connectors, tempDir, webResourceCached, conf, deleteBaseOnStartup, jaxrsMapping, cdiConversation, jaxrsProviderSetup, jaxrsDefaultProviders, jaxrsAutoActivateBeanValidation, jaxrsLogProviders, jsonpBufferStrategy, jsonpMaxStringLen, jsonpMaxReadBufferLen, jsonpMaxWriteBufferLen, jsonpSupportsComment, jsonpPrettify, jsonbEncoding, jsonbNulls, jsonbIJson, jsonbPrettify, jsonbBinaryStrategy, jsonbNamingStrategy, jsonbOrderStrategy, loggingGlobalSetup, cxfServletParams, tomcatScanning, tomcatAutoSetup, tomcatJspDevelopment, useShutdownHook, tomcatFilter, scanningIncludes, scanningExcludes, scanningPackageIncludes, scanningPackageExcludes, webSessionTimeout, webSessionCookieConfig, useTomcatDefaults, tomcatWrapLoader, tomcatNoJmx, sharedLibraries, useLog4j2JulLogManager, injectServletContainerInitializer, tomcatAccessLogPattern, meecrowaveProperties, jaxwsSupportIfAvailable, defaultSSLHostConfigName, initializeClientBus, extensions, instanceCustomizers, initializers, antiResourceLocking, contextConfigurers);
     }
 
     private static ObjectRecipe newRecipe(final String clazz) {

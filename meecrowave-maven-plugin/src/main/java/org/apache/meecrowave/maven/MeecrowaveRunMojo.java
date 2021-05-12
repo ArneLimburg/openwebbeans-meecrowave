@@ -67,6 +67,9 @@ public class MeecrowaveRunMojo extends AbstractMojo {
     @Parameter(property = "meecrowave.watcher-bounding", defaultValue = "0")
     private int watcherBouncing;
 
+    @Parameter(property = "meecrowave.reload-classes", defaultValue = "true")
+    private boolean reloadClasses;
+
     @Parameter(property = "meecrowave.http", defaultValue = "8080")
     private int httpPort;
 

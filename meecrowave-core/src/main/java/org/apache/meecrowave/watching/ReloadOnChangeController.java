@@ -19,10 +19,14 @@
 package org.apache.meecrowave.watching;
 
 import org.apache.catalina.Context;
+import org.apache.meecrowave.configuration.Configuration;
 import org.apache.meecrowave.logging.tomcat.LogFacade;
+import org.apache.meecrowave.tomcat.ProvidedLoader;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,6 +46,8 @@ import static java.util.Arrays.asList;
 public class ReloadOnChangeController implements AutoCloseable, Runnable {
     private final Context context;
     private final long bouncing;
+    private final boolean tomcatWrapLoader;
+    private final boolean reloadClasses;
     private final Collection<Path> paths = new ArrayList<>();
     private WatchService watchService;
     private Thread bouncer;
@@ -49,9 +55,11 @@ public class ReloadOnChangeController implements AutoCloseable, Runnable {
     private volatile boolean running = true;
     private volatile long redeployMarker = System.nanoTime();
 
-    public ReloadOnChangeController(final Context context, final int watcherBouncing) {
+    public ReloadOnChangeController(final Context context, final Configuration configuration) {
         this.context = context;
-        this.bouncing = (long) watcherBouncing;
+        this.bouncing = (long) configuration.getWatcherBouncing();
+        this.tomcatWrapLoader = configuration.isTomcatWrapLoader();
+        this.reloadClasses = configuration.isReloadClasses();
     }
 
     public void register(final File folder) {
@@ -79,6 +87,26 @@ public class ReloadOnChangeController implements AutoCloseable, Runnable {
     }
 
     protected synchronized void redeploy() {
+    	if (reloadClasses) {
+    		final ClassLoader oldClassLoader = context.getLoader().getClassLoader();
+    		if (oldClassLoader instanceof URLClassLoader) {
+    			final Thread thread = Thread.currentThread();
+    			final ClassLoader contextClassLoader = thread.getContextClassLoader();
+    			if (contextClassLoader != oldClassLoader && contextClassLoader instanceof URLClassLoader) {
+    				try {
+    					URLClassLoader.class.cast(contextClassLoader).close();
+    				} catch (final IOException e) {
+    					new LogFacade(ReloadOnChangeController.class.getName()).warn(e.getMessage(), e);
+    				}
+    			}
+    			URL[] urls = URLClassLoader.class.cast(oldClassLoader).getURLs();
+    			thread.setContextClassLoader(new URLClassLoader(urls, oldClassLoader.getParent()));
+    			context.setLoader(new ProvidedLoader(thread.getContextClassLoader(), tomcatWrapLoader));
+    		} else {
+    			new LogFacade(ReloadOnChangeController.class.getName())
+            		.warn("Unknown ClassLoader type " + oldClassLoader.getClass().getName() + " - Hot reloading will not be available");
+    		}
+    	}
         context.reload();
     }
 
@@ -149,6 +177,7 @@ public class ReloadOnChangeController implements AutoCloseable, Runnable {
                 if (needsRedeploy && last == antepenultiem) {
                     new LogFacade(ReloadOnChangeController.class.getName()).info("Redeploying " + context.getName());
                     redeploy();
+                    needsRedeploy = false;
                 }
             }
         });
