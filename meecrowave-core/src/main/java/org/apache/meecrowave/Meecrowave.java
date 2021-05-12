@@ -190,7 +190,7 @@ public class Meecrowave implements AutoCloseable {
         return deployWebapp(new DeploymentMeta(meta.context, meta.docBase, ofNullable(meta.consumer).map(c -> (Consumer<Context>) ctx -> {
             builtInCustomizer.accept(ctx);
             c.accept(ctx);
-        }).orElse(builtInCustomizer)));
+        }).orElse(builtInCustomizer), meta.reloadClassesOnRedeploy));
     }
 
     // shortcut
@@ -320,7 +320,7 @@ public class Meecrowave implements AutoCloseable {
             }
         };
 
-        ctx.addLifecycleListener(new MeecrowaveContextConfig(configuration, meta.docBase != null, meecrowaveInitializer));
+        ctx.addLifecycleListener(new MeecrowaveContextConfig(configuration, meta.docBase != null, meecrowaveInitializer, meta.reloadClassesOnRedeploy));
         ctx.addLifecycleListener(event -> {
             switch (event.getType()) {
                 case Lifecycle.BEFORE_START_EVENT:
@@ -1976,11 +1976,17 @@ public class Meecrowave implements AutoCloseable {
         private final String context;
         private final File docBase;
         private final Consumer<Context> consumer;
+        private final boolean reloadClassesOnRedeploy;
 
         public DeploymentMeta(final String context, final File docBase, final Consumer<Context> consumer) {
-            this.context = context;
+        	this(context, docBase, consumer, false);
+        }
+
+        public DeploymentMeta(final String context, final File docBase, final Consumer<Context> consumer, boolean reloadClassesOnRedeploy) {
+        	this.context = context;
             this.docBase = docBase;
             this.consumer = consumer;
+            this.reloadClassesOnRedeploy = reloadClassesOnRedeploy;
         }
     }
 

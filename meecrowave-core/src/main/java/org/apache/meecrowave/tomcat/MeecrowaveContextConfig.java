@@ -68,13 +68,15 @@ public class MeecrowaveContextConfig extends ContextConfig {
     private final Map<String, Collection<Class<?>>> webClasses = new HashMap<>();
     private final boolean fixDocBase;
     private final ServletContainerInitializer intializer;
+    private final boolean reloadClassesOnRedeploy;
     private OwbAnnotationFinder finder;
     private ReloadOnChangeController watcher;
 
-    public MeecrowaveContextConfig(final Configuration configuration, final boolean fixDocBase, final ServletContainerInitializer intializer) {
+    public MeecrowaveContextConfig(final Configuration configuration, final boolean fixDocBase, final ServletContainerInitializer intializer, final boolean reloadClassesOnRedeploy) {
         this.configuration = configuration;
         this.fixDocBase = fixDocBase;
         this.intializer= intializer;
+        this.reloadClassesOnRedeploy = reloadClassesOnRedeploy;
     }
 
     @Override
@@ -111,7 +113,7 @@ public class MeecrowaveContextConfig extends ContextConfig {
                 scannerService.setDocBase(context.getDocBase());
                 scannerService.setShared(configuration.getSharedLibraries());
                 if (configuration.getWatcherBouncing() > 0) { // note that caching should be disabled with this config in most of the times
-                    watcher = new ReloadOnChangeController(context, configuration.getWatcherBouncing());
+                    watcher = new ReloadOnChangeController(context, configuration, reloadClassesOnRedeploy);
                     scannerService.setFileVisitor(f -> watcher.register(f));
                 }
                 scannerService.scan();
